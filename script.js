@@ -1,5 +1,5 @@
 // Array com os nomes dos arquivos PDF
-const pdfFiles = ["pdf/Dash - Produção-1.pdf", "Dash - Produção-2.pdf", "pdf/Dash - Produção-3.pdf", "pdf/Dash - Produção-4.pdf"];
+const pdfFiles = ["pdf/Dash - Produção-1.pdf", "pdf/Dash - Produção-2.pdf", "pdf/Dash - Produção-3.pdf", "pdf/Dash - Produção-4.pdf"];
 let currentIndex = 0;
 
 // Função para carregar o próximo PDF no iframe
