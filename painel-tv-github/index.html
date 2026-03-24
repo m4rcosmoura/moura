@@ -19,14 +19,15 @@
       height: 100%;
       background: #000;
       overflow: hidden;
-      font-family: Arial, Helvetica, sans-serif;
     }
 
     .app {
-      position: relative;
       width: 100vw;
       height: 100vh;
       background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #slide {
@@ -34,7 +35,7 @@
       height: 100%;
       object-fit: contain;
       background: #000;
-      display: block;
+      display: none;
       opacity: 1;
       transition: opacity 0.8s ease-in-out;
     }
@@ -42,47 +43,16 @@
     #slide.fade-out {
       opacity: 0.15;
     }
-
-    .status {
-      position: absolute;
-      right: 16px;
-      bottom: 16px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.75);
-      background: rgba(0,0,0,0.35);
-      letter-spacing: 0.2px;
-      user-select: none;
-    }
-
-    .erro {
-      position: absolute;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 20px;
-      text-align: center;
-      padding: 24px;
-    }
-
-    .erro.show {
-      display: flex;
-    }
   </style>
 </head>
 <body>
   <div class="app">
     <img id="slide" alt="Slide em exibição" />
-    <div id="erro" class="erro">Nenhuma imagem disponível.</div>
-    <div id="status" class="status">Iniciando...</div>
   </div>
 
   <script>
-    const TEMPO_SLIDE = 15000;       // 15 segundos
-    const TEMPO_RELOAD = 60000;      // 1 minuto
+    const TEMPO_SLIDE = 15000;   // 15 segundos
+    const TEMPO_RELOAD = 60000;  // 1 minuto
     const ARQUIVO_LISTA = "images.json";
 
     let imagens = [];
@@ -90,8 +60,6 @@
     let timerSlides = null;
 
     const slide = document.getElementById("slide");
-    const statusBox = document.getElementById("status");
-    const erroBox = document.getElementById("erro");
 
     async function carregarLista() {
       try {
@@ -99,67 +67,85 @@
           cache: "no-store"
         });
 
-        if (!resposta.ok) {
-          throw new Error("Falha ao ler images.json");
-        }
+        if (!resposta.ok) return;
 
         const lista = await resposta.json();
 
-        if (!Array.isArray(lista) || lista.length === 0) {
-          throw new Error("A lista de imagens está vazia.");
-        }
+        if (!Array.isArray(lista)) return;
 
-        imagens = lista.filter(item => typeof item === "string" && item.trim() !== "");
+        imagens = lista
+          .filter(item => typeof item === "string")
+          .map(item => item.trim())
+          .filter(item => item !== "");
 
         if (imagens.length === 0) {
-          throw new Error("Nenhuma imagem válida encontrada.");
+          slide.style.display = "none";
+          return;
         }
-
-        statusBox.textContent = `${imagens.length} imagem(ns) carregada(s)`;
-        erroBox.classList.remove("show");
-        slide.style.display = "block";
 
         if (indice >= imagens.length) {
           indice = 0;
         }
 
-        mostrarImagem(indice);
+        await mostrarImagem(indice);
         iniciarLoop();
       } catch (erro) {
-        console.error(erro);
-        statusBox.textContent = "Erro ao carregar imagens";
-        erroBox.classList.add("show");
-        slide.style.display = "none";
+        console.error("Erro ao carregar images.json:", erro);
       }
     }
 
-    function mostrarImagem(posicao) {
-      if (!imagens.length) return;
-
-      slide.classList.add("fade-out");
-
-      setTimeout(() => {
-        slide.src = `${imagens[posicao]}?v=${Date.now()}`;
-        slide.onload = () => {
-          slide.classList.remove("fade-out");
-        };
-        slide.onerror = () => {
-          statusBox.textContent = `Erro ao abrir: ${imagens[posicao]}`;
-          slide.classList.remove("fade-out");
-        };
-      }, 250);
+    function carregarImagem(src) {
+      return new Promise((resolve, reject) => {
+        const imgTeste = new Image();
+        imgTeste.onload = () => resolve(src);
+        imgTeste.onerror = () => reject(new Error(`Falha ao abrir ${src}`));
+        imgTeste.src = `${src}?v=${Date.now()}`;
+      });
     }
 
-    function proximaImagem() {
+    async function mostrarImagem(posicaoInicial) {
       if (!imagens.length) return;
-      indice = (indice + 1) % imagens.length;
-      mostrarImagem(indice);
+
+      let tentativas = 0;
+      let posicao = posicaoInicial;
+
+      while (tentativas < imagens.length) {
+        const caminho = imagens[posicao];
+
+        try {
+          await carregarImagem(caminho);
+
+          slide.classList.add("fade-out");
+
+          setTimeout(() => {
+            slide.src = `${caminho}?v=${Date.now()}`;
+            slide.style.display = "block";
+            slide.onload = () => slide.classList.remove("fade-out");
+            slide.onerror = () => slide.classList.remove("fade-out");
+          }, 250);
+
+          indice = posicao;
+          return;
+        } catch (erro) {
+          console.warn(erro.message);
+          posicao = (posicao + 1) % imagens.length;
+          tentativas++;
+        }
+      }
+
+      slide.style.display = "none";
+    }
+
+    async function proximaImagem() {
+      if (!imagens.length) return;
+
+      const proximoIndice = (indice + 1) % imagens.length;
+      await mostrarImagem(proximoIndice);
     }
 
     function iniciarLoop() {
-      if (timerSlides) {
-        clearInterval(timerSlides);
-      }
+      if (timerSlides) clearInterval(timerSlides);
+      if (imagens.length <= 1) return;
       timerSlides = setInterval(proximaImagem, TEMPO_SLIDE);
     }
 

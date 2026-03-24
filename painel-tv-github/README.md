@@ -1,18 +1,17 @@
 # Painel TV para GitHub Pages
 
-## Arquivos
-- `index.html` -> página que exibe as imagens em loop
-- `images.json` -> lista das imagens exibidas
-- `imagens/` -> pasta onde ficam os arquivos de imagem
+## Estrutura
+- `index.html` -> exibe as imagens em loop
+- `images.json` -> lista das imagens
+- `imagens/` -> pasta das imagens
 
-## Como usar
-1. Suba todos os arquivos para um repositório no GitHub.
-2. Crie a pasta `imagens`.
-3. Coloque suas imagens dentro dela.
-4. Edite o `images.json` com os nomes corretos.
-5. Ative o GitHub Pages nas configurações do repositório.
+## Como funciona
+- Lê automaticamente quantas imagens existirem no `images.json`
+- Pode funcionar com 1 imagem ou com 100 imagens
+- Se alguma imagem estiver com nome errado, ela é ignorada sem mostrar erro na tela
+- Recarrega a página a cada 1 minuto para pegar atualizações do GitHub
 
-## Exemplo do `images.json`
+## Exemplo de `images.json`
 [
   "imagens/slide1.jpg",
   "imagens/slide2.jpg",
@@ -20,8 +19,9 @@
 ]
 
 ## Como atualizar
-- Adicione, remova ou troque imagens na pasta `imagens`
-- Atualize o `images.json`
-- Faça commit
+1. Coloque as imagens na pasta `imagens`
+2. Edite o `images.json`
+3. Faça commit no GitHub
 
-A TV recarrega a página a cada 1 minuto e pega as alterações.
+## Atenção
+Os nomes no `images.json` precisam bater exatamente com os nomes reais dos arquivos.
