@@ -36,12 +36,6 @@
       object-fit: contain;
       background: #000;
       display: none;
-      opacity: 1;
-      transition: opacity 0.8s ease-in-out;
-    }
-
-    #slide.fade-out {
-      opacity: 0.15;
     }
   </style>
 </head>
@@ -114,16 +108,8 @@
 
         try {
           await carregarImagem(caminho);
-
-          slide.classList.add("fade-out");
-
-          setTimeout(() => {
-            slide.src = `${caminho}?v=${Date.now()}`;
-            slide.style.display = "block";
-            slide.onload = () => slide.classList.remove("fade-out");
-            slide.onerror = () => slide.classList.remove("fade-out");
-          }, 250);
-
+          slide.src = `${caminho}?v=${Date.now()}`;
+          slide.style.display = "block";
           indice = posicao;
           return;
         } catch (erro) {
