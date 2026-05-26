@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel TV</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #slide {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <img id="slide" alt="Slide em exibição" />
+  </div>
+
+  <script>
+    const TEMPO_SLIDE = 30000;   // 30 segundos
+    const TEMPO_RELOAD = 180000;  // 3 minutos
+    const ARQUIVO_LISTA = "images.json";
+
+    let imagens = [];
+    let indice = 0;
+    let timerSlides = null;
+
+    const slide = document.getElementById("slide");
+
+    async function carregarLista() {
+      try {
+        const resposta = await fetch(`${ARQUIVO_LISTA}?t=${Date.now()}`, {
+          cache: "no-store"
+        });
+
+        if (!resposta.ok) return;
+
+        const lista = await resposta.json();
+
+        if (!Array.isArray(lista)) return;
+
+        imagens = lista
+          .filter(item => typeof item === "string")
+          .map(item => item.trim())
+          .filter(item => item !== "");
+
+        if (imagens.length === 0) {
+          slide.style.display = "none";
+          return;
+        }
+
+        if (indice >= imagens.length) {
+          indice = 0;
+        }
+
+        await mostrarImagem(indice);
+        iniciarLoop();
+      } catch (erro) {
+        console.error("Erro ao carregar images.json:", erro);
+      }
+    }
+
+    function carregarImagem(src) {
+      return new Promise((resolve, reject) => {
+        const imgTeste = new Image();
+        imgTeste.onload = () => resolve(src);
+        imgTeste.onerror = () => reject(new Error(`Falha ao abrir ${src}`));
+        imgTeste.src = `${src}?v=${Date.now()}`;
+      });
+    }
+
+    async function mostrarImagem(posicaoInicial) {
+      if (!imagens.length) return;
+
+      let tentativas = 0;
+      let posicao = posicaoInicial;
+
+      while (tentativas < imagens.length) {
+        const caminho = imagens[posicao];
+
+        try {
+          await carregarImagem(caminho);
+          slide.src = `${caminho}?v=${Date.now()}`;
+          slide.style.display = "block";
+          indice = posicao;
+          return;
+        } catch (erro) {
+          console.warn(erro.message);
+          posicao = (posicao + 1) % imagens.length;
+          tentativas++;
+        }
+      }
+
+      slide.style.display = "none";
+    }
+
+    async function proximaImagem() {
+      if (!imagens.length) return;
+
+      const proximoIndice = (indice + 1) % imagens.length;
+      await mostrarImagem(proximoIndice);
+    }
+
+    function iniciarLoop() {
+      if (timerSlides) clearInterval(timerSlides);
+      if (imagens.length <= 1) return;
+      timerSlides = setInterval(proximaImagem, TEMPO_SLIDE);
+    }
+
+    async function iniciar() {
+      await carregarLista();
+
+      setInterval(() => {
+        location.reload();
+      }, TEMPO_RELOAD);
+    }
+
+    iniciar();
+  </script>
+</body>
+</html>
