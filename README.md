@@ -15,7 +15,8 @@
 [
   "imagens/slide1.jpg",
   "imagens/slide2.jpg",
-  "imagens/slide3.jpg"
+  "imagens/slide3.jpg",
+  'imagens/slide4".jpg
 ]
 
 ## Como atualizar
