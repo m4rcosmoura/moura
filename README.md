@@ -13,10 +13,10 @@
 
 ## Exemplo de `images.json`
 [
-  "imagens/slide1.jpg",
   "imagens/slide2.jpg",
   "imagens/slide3.jpg",
-  'imagens/slide4".jpg
+  "imagens/slide4.jpg",
+  'imagens/slide5".jpg
 ]
 
 ## Como atualizar
